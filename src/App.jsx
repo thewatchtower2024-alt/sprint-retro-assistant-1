@@ -542,9 +542,14 @@ ${workItems || "None provided"}`;
               </div>
             </div>
             <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-              <input type="password" value={apiKey} onChange={e=>setApiKey(e.target.value)}
-                style={{width:200,padding:"5px 10px",fontSize:11,fontFamily:"Space Mono"}}
-                placeholder="sk-ant-... API key"/>
+              <div style={{display:"flex",alignItems:"center",gap:6,background: apiKey ? "rgba(34,197,94,0.06)" : "rgba(245,158,11,0.08)", border: `1px solid ${apiKey ? "rgba(34,197,94,0.2)" : "rgba(245,158,11,0.3)"}`, borderRadius:8, padding:"4px 10px"}}>
+                <span style={{fontSize:10,fontFamily:"Space Mono",color: apiKey ? "#4ade80" : "#f59e0b",whiteSpace:"nowrap"}}>
+                  {apiKey ? "🔑 Key set" : "🔑 API Key"}
+                </span>
+                <input type="password" value={apiKey} onChange={e=>setApiKey(e.target.value)}
+                  style={{width:160,padding:"3px 6px",fontSize:11,fontFamily:"Space Mono",background:"transparent",border:"none",outline:"none",borderBottom:"1px solid rgba(255,255,255,0.1)"}}
+                  placeholder="sk-ant-api03-..."/>
+              </div>
               <input type="text" value={sprintName} onChange={e=>setSprintName(e.target.value)}
                 style={{width:130,padding:"5px 10px",fontSize:12}} placeholder="Sprint name..."/>
               <div className="sprint-badge"><div className="dot"/>{sprintName}</div>
@@ -577,6 +582,23 @@ ${workItems || "None provided"}`;
             {/* ══════════ DATA TAB ══════════ */}
             {tab==="data" && (
               <>
+                {/* API key onboarding banner — shown only when no key is set */}
+                {!apiKey && (
+                  <div style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:10,padding:"16px 20px",marginBottom:20,display:"flex",gap:16,alignItems:"flex-start",flexWrap:"wrap"}}>
+                    <span style={{fontSize:22,flexShrink:0}}>🔑</span>
+                    <div style={{flex:1,minWidth:200}}>
+                      <div style={{fontWeight:700,color:"#f59e0b",marginBottom:4,fontSize:14}}>Anthropic API Key Required</div>
+                      <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.7,marginBottom:10}}>
+                        Paste your key into the field in the top-right header to enable AI analysis. Keys start with <code style={{fontFamily:"Space Mono",background:"rgba(255,255,255,0.06)",padding:"1px 5px",borderRadius:3}}>sk-ant-</code>
+                      </div>
+                      <div style={{fontSize:11,color:"#64748b",fontFamily:"Space Mono"}}>
+                        Get a key → <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer"
+                          style={{color:"#f59e0b",textDecoration:"none"}}>console.anthropic.com/settings/keys</a>
+                        &nbsp;·&nbsp; Each user needs their own key &nbsp;·&nbsp; Usage is pay-per-call (~$0.01/analysis)
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="card">
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
                     <div className="card-title"><Icon path={IC.message} size={13} color="#f59e0b"/>Microsoft Teams Channel Notes</div>
