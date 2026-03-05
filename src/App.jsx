@@ -1,14 +1,20 @@
 import { useState, useCallback } from "react";
 
 const API = "https://api.anthropic.com/v1/messages";
-const callClaude = async (system, user, maxTokens = 2500) => {
+const callClaude = async (system, user, apiKey, maxTokens = 2500) => {
   const r = await fetch(API, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
     body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: maxTokens,
       system, messages: [{ role: "user", content: user }] }),
   });
   const d = await r.json();
+  if (d.error) throw new Error(d.error.message);
   return d.content?.[0]?.text || "";
 };
 const parseJSON = (t) => {
@@ -137,6 +143,7 @@ const INTEGRATIONS = [
 
 export default function App() {
   const [tab,          setTab]          = useState("data");
+  const [apiKey,       setApiKey]       = useState("");
   const [sprintName,   setSprintName]   = useState("Sprint 42");
   const [notes,        setNotes]        = useState("");
   const [workItems,    setWorkItems]    = useState("");
@@ -152,6 +159,7 @@ export default function App() {
   // ── AI analysis ────────────────────────────────────────────────────────────
   const analyze = useCallback(async () => {
     if (!notes && !workItems) return;
+    if (!apiKey) { alert("Please enter your Anthropic API key first."); return; }
     setLoading(true);
     setResult(null); setCards({});
 
@@ -209,7 +217,8 @@ ADO WORK ITEMS:
 ${workItems || "None provided"}`;
 
     try {
-      const raw = await callClaude(system, prompt, 2500);
+      const raw = await callClaude(system, prompt, apiKey, 2500);
+      console.log("Claude raw response:", raw);
       const parsed = parseJSON(raw);
       if (parsed) {
         setResult(parsed);
@@ -220,8 +229,11 @@ ${workItems || "None provided"}`;
         });
         setCards(shaped);
         setTab("analysis");
+      } else {
+        console.error("JSON parse failed. Raw:", raw);
+        alert("Analysis failed — could not parse AI response. Check browser console for details.");
       }
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error("API error:", e); alert("API error: " + e.message); }
 
     setLoading(false);
     setLoadStep("");
@@ -347,6 +359,9 @@ ${workItems || "None provided"}`;
               </div>
             </div>
             <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+              <input type="password" value={apiKey} onChange={e=>setApiKey(e.target.value)}
+                style={{width:200,padding:"5px 10px",fontSize:11,fontFamily:"Space Mono"}}
+                placeholder="sk-ant-... API key"/>
               <input type="text" value={sprintName} onChange={e=>setSprintName(e.target.value)}
                 style={{width:130,padding:"5px 10px",fontSize:12}} placeholder="Sprint name..."/>
               <div className="sprint-badge"><div className="dot"/>{sprintName}</div>
@@ -409,7 +424,7 @@ ${workItems || "None provided"}`;
                     <Icon path={IC.plug} size={13}/>Manage Integrations
                   </button>
                   <button className="btn btn-primary" onClick={analyze}
-                    disabled={loading||(!notes&&!workItems)}>
+                    disabled={loading||(!notes&&!workItems)||!apiKey}>
                     {loading
                       ? <><Icon path={IC.loader} size={14} color="#0a0c10" className="spin"/>{loadStep||"Analyzing..."}</>
                       : <><Icon path={IC.zap} size={14} color="#0a0c10"/>Analyze Iteration with AI</>}
