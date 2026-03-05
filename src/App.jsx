@@ -143,18 +143,91 @@ const INTEGRATIONS = [
 
 export default function App() {
   const [tab,          setTab]          = useState("data");
-  const [apiKey,       setApiKey]       = useState("");
+  const [apiKey,       setApiKey]       = useState(import.meta.env.VITE_ANTHROPIC_API_KEY || "");
   const [sprintName,   setSprintName]   = useState("Sprint 42");
   const [notes,        setNotes]        = useState("");
   const [workItems,    setWorkItems]    = useState("");
   const [loading,      setLoading]      = useState(false);
   const [loadStep,     setLoadStep]     = useState("");
-  const [result,       setResult]       = useState(null);   // full AI JSON
-  const [cards,        setCards]        = useState({});     // {good:[],bad:[],keep:[],change:[],actionItems:[]}
-  const [ctxInput,     setCtxInput]     = useState({});     // {cardId: "text"}
+  const [result,       setResult]       = useState(null);
+  const [cards,        setCards]        = useState({});
+  const [ctxInput,     setCtxInput]     = useState({});
   const [authorName,   setAuthorName]   = useState("");
   const [integrations, setIntegrations] = useState({ado:{connected:false,url:"",token:""},jira:{connected:false,url:"",token:""}});
-  const [showIntModal, setShowIntModal] = useState(null);   // "ado"|"jira"|null
+  const [showIntModal, setShowIntModal] = useState(null);
+
+  // ── Archive state ──────────────────────────────────────────────────────────
+  const [archive,       setArchive]      = useState(() => {
+    try { return JSON.parse(localStorage.getItem("retro-archive") || "[]"); }
+    catch { return []; }
+  });
+  const [archiveFilter, setArchiveFilter] = useState("");
+  const [archiveSort,   setArchiveSort]   = useState("newest");
+  const [confirmDelete, setConfirmDelete] = useState(null); // id to confirm
+
+  const saveToArchive = (snap) => {
+    const entry = {
+      id:        Date.now().toString(),
+      savedAt:   new Date().toISOString(),
+      sprintName: snap.sprintName,
+      notes:     snap.notes,
+      workItems:  snap.workItems,
+      result:    snap.result,
+      cards:     snap.cards,
+    };
+    const updated = [entry, ...archive];
+    setArchive(updated);
+    try { localStorage.setItem("retro-archive", JSON.stringify(updated)); } catch(e) { console.error(e); }
+    return entry.id;
+  };
+
+  const deleteFromArchive = (id) => {
+    const updated = archive.filter(e => e.id !== id);
+    setArchive(updated);
+    try { localStorage.setItem("retro-archive", JSON.stringify(updated)); } catch(e) { console.error(e); }
+    setConfirmDelete(null);
+  };
+
+  const loadFromArchive = (entry) => {
+    setSprintName(entry.sprintName);
+    setNotes(entry.notes);
+    setWorkItems(entry.workItems);
+    setResult(entry.result);
+    setCards(entry.cards);
+    setTab("analysis");
+  };
+
+  const exportArchive = () => {
+    const blob = new Blob([JSON.stringify(archive, null, 2)], { type: "application/json" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = "retro-archive.json"; a.click();
+  };
+
+  const exportSingleSprint = (entry) => {
+    const blob = new Blob([JSON.stringify(entry, null, 2)], { type: "application/json" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = `retro-${entry.sprintName.replace(/\s+/g,"-").toLowerCase()}.json`; a.click();
+  };
+
+  const importArchive = (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        // Accept either single sprint object or array
+        const entries = Array.isArray(data) ? data : [data];
+        const merged = [...entries.filter(e => e.id && e.sprintName), ...archive];
+        // Deduplicate by id
+        const deduped = merged.filter((e,i,arr) => arr.findIndex(x => x.id === e.id) === i);
+        setArchive(deduped);
+        localStorage.setItem("retro-archive", JSON.stringify(deduped));
+        alert(`Imported ${entries.length} sprint(s) successfully.`);
+      } catch { alert("Invalid archive file — must be a JSON export from this app."); }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
 
   // ── AI analysis ────────────────────────────────────────────────────────────
   const analyze = useCallback(async () => {
@@ -222,12 +295,13 @@ ${workItems || "None provided"}`;
       const parsed = parseJSON(raw);
       if (parsed) {
         setResult(parsed);
-        // shape cards for kanban
         const shaped = {};
         LANES.forEach(l => {
           shaped[l.id] = (parsed.talkingPoints?.[l.id] || []).map(c => ({ ...c, contexts: [] }));
         });
         setCards(shaped);
+        // Auto-save to archive
+        saveToArchive({ sprintName, notes, workItems, result: parsed, cards: shaped });
         setTab("analysis");
       } else {
         console.error("JSON parse failed. Raw:", raw);
@@ -334,6 +408,7 @@ ${workItems || "None provided"}`;
     { id:"analysis", label:"AI Analysis",     icon:IC.zap     },
     { id:"talking",  label:"Talking Points",  icon:IC.message },
     { id:"summary",  label:"Sprint Summary",  icon:IC.chart   },
+    { id:"archive",  label:"Archive",         icon:IC.star    },
     { id:"connect",  label:"Integrations",    icon:IC.plug    },
   ];
   const totalCards = Object.values(cards).reduce((s,l)=>s+l.length,0);
@@ -378,6 +453,9 @@ ${workItems || "None provided"}`;
                 <Icon path={t.icon} size={13}/>{t.label}
                 {t.id==="talking" && totalCards>0 && (
                   <span style={{background:"rgba(245,158,11,0.2)",color:"#f59e0b",borderRadius:"4px",padding:"1px 6px",fontSize:10}}>{totalCards}</span>
+                )}
+                {t.id==="archive" && archive.length>0 && (
+                  <span style={{background:"rgba(20,184,166,0.2)",color:"#14b8a6",borderRadius:"4px",padding:"1px 6px",fontSize:10}}>{archive.length}</span>
                 )}
                 {t.id==="connect" && Object.values(integrations).some(i=>i.connected) && (
                   <span className="badge b-teal" style={{fontSize:9,padding:"1px 5px"}}>linked</span>
@@ -722,6 +800,128 @@ ${workItems || "None provided"}`;
                     </button>
                   </div>
                 </>
+            )}
+
+            {/* ══════════ ARCHIVE TAB ══════════ */}
+            {tab==="archive" && (
+              <>
+                {/* Toolbar */}
+                <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:20}}>
+                  <input type="text" value={archiveFilter} onChange={e=>setArchiveFilter(e.target.value)}
+                    placeholder="Search sprints..." style={{width:220,padding:"7px 12px",fontSize:12}}/>
+                  <select value={archiveSort} onChange={e=>setArchiveSort(e.target.value)}
+                    style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"7px 12px",color:"#e2e8f0",fontSize:12,fontFamily:"Space Mono",outline:"none"}}>
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="name">Sprint name A–Z</option>
+                    <option value="health">Health status</option>
+                  </select>
+                  <div style={{marginLeft:"auto",display:"flex",gap:8}}>
+                    <label className="btn btn-ghost btn-sm" style={{cursor:"pointer"}}>
+                      <Icon path={IC.link} size={12}/>Import
+                      <input type="file" accept=".json" onChange={importArchive} style={{display:"none"}}/>
+                    </label>
+                    {archive.length>0 && (
+                      <button className="btn btn-ghost btn-sm" onClick={exportArchive}>
+                        <Icon path={IC.dl} size={12}/>Export All
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {archive.length===0 ? (
+                  <div className="empty">
+                    No sprints archived yet.<br/><br/>
+                    Sprints are automatically saved here after each analysis.<br/>
+                    <button className="btn btn-primary" style={{marginTop:16}} onClick={()=>setTab("data")}>
+                      <Icon path={IC.zap} size={13} color="#0a0c10"/>Run Your First Analysis
+                    </button>
+                  </div>
+                ) : (() => {
+                    const healthOrder = {green:0,yellow:1,red:2};
+                    const filtered = archive
+                      .filter(e => !archiveFilter || e.sprintName.toLowerCase().includes(archiveFilter.toLowerCase()))
+                      .sort((a,b) => {
+                        if (archiveSort==="oldest") return new Date(a.savedAt)-new Date(b.savedAt);
+                        if (archiveSort==="name")   return a.sprintName.localeCompare(b.sprintName);
+                        if (archiveSort==="health")  return (healthOrder[a.result?.sprintHealth]??3)-(healthOrder[b.result?.sprintHealth]??3);
+                        return new Date(b.savedAt)-new Date(a.savedAt); // newest
+                      });
+
+                    if (filtered.length===0) return (
+                      <div className="empty">No sprints match "{archiveFilter}"</div>
+                    );
+
+                    return filtered.map(entry => {
+                      const wi = entry.result?.workItemAnalysis || {};
+                      const health = entry.result?.sprintHealth || "green";
+                      const healthColor = {green:"#4ade80",yellow:"#f59e0b",red:"#f87171"}[health] || "#4ade80";
+                      const healthCls   = {green:"b-green",yellow:"b-amber",red:"b-red"}[health] || "b-green";
+                      const totalCards  = Object.values(entry.cards||{}).reduce((s,l)=>s+l.length,0);
+                      const savedDate   = new Date(entry.savedAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+                      const savedTime   = new Date(entry.savedAt).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+                      const isActive    = entry.sprintName===sprintName && result;
+
+                      return (
+                        <div key={entry.id} className="card" style={{borderColor: isActive ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.08)",marginBottom:14}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
+                            {/* Left: sprint info */}
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6,flexWrap:"wrap"}}>
+                                <span style={{fontSize:16,fontWeight:800,color:"#fff"}}>{entry.sprintName}</span>
+                                <span className={`badge ${healthCls}`}>{health.toUpperCase()}</span>
+                                {isActive && <span className="badge b-amber">● Current</span>}
+                              </div>
+                              <div style={{fontFamily:"Space Mono",fontSize:10,color:"#475569",marginBottom:10}}>
+                                Saved {savedDate} at {savedTime}
+                              </div>
+                              {/* Mini metrics row */}
+                              <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+                                {[
+                                  {label:"Points",   val:`${wi.completedPoints||0}/${wi.plannedPoints||0}`},
+                                  {label:"Accuracy", val:`${wi.commitmentAccuracy||0}%`},
+                                  {label:"PBIs",     val:wi.pbisCompleted||0},
+                                  {label:"Bugs",     val:wi.bugsCompleted||0},
+                                  {label:"Cards",    val:totalCards},
+                                ].map(m=>(
+                                  <div key={m.label} style={{textAlign:"center"}}>
+                                    <div style={{fontSize:14,fontWeight:800,color:healthColor,fontFamily:"Space Mono"}}>{m.val}</div>
+                                    <div style={{fontSize:9,color:"#475569",textTransform:"uppercase",letterSpacing:".08em"}}>{m.label}</div>
+                                  </div>
+                                ))}
+                              </div>
+                              {entry.result?.summary && (
+                                <p style={{fontSize:12,color:"#64748b",marginTop:10,lineHeight:1.6,fontStyle:"italic"}}>
+                                  "{entry.result.summary.slice(0,160)}{entry.result.summary.length>160?"...":""}"
+                                </p>
+                              )}
+                            </div>
+                            {/* Right: actions */}
+                            <div style={{display:"flex",flexDirection:"column",gap:8,flexShrink:0}}>
+                              <button className="btn btn-primary btn-sm" onClick={()=>loadFromArchive(entry)}>
+                                <Icon path={IC.eye} size={12} color="#0a0c10"/>Load & Review
+                              </button>
+                              <button className="btn btn-ghost btn-sm" onClick={()=>exportSingleSprint(entry)}>
+                                <Icon path={IC.dl} size={12}/>Export JSON
+                              </button>
+                              {confirmDelete===entry.id ? (
+                                <div style={{display:"flex",gap:6}}>
+                                  <button className="btn btn-red btn-sm" onClick={()=>deleteFromArchive(entry.id)}>Confirm</button>
+                                  <button className="btn btn-ghost btn-sm" onClick={()=>setConfirmDelete(null)}>Cancel</button>
+                                </div>
+                              ) : (
+                                <button className="btn btn-ghost btn-sm" style={{color:"#475569"}} onClick={()=>setConfirmDelete(entry.id)}>
+                                  <Icon path={IC.trash} size={12}/>Delete
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()
+                }
+              </>
             )}
 
             {/* ══════════ INTEGRATIONS TAB ══════════ */}
