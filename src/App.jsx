@@ -46,6 +46,7 @@ const IC = {
   check:    "M20 6L9 17l-5-5",
   eye:      "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 12m-3 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0",
   link:     "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71 M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71",
+  refresh:  "M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0 1 14.85-3.36L23 10 M1 14l4.64 4.36A9 9 0 0 0 20.49 15",
 };
 
 const css = `
@@ -136,10 +137,7 @@ const LANES = [
 ];
 
 // ── Integration stub config ─────────────────────────────────────────────────
-const INTEGRATIONS = [
-  { id:"ado",  label:"Azure DevOps", color:"#0078d4", desc:"Connect to pull PBIs, Bugs, cycle time & lane durations automatically" },
-  { id:"jira", label:"Jira",         color:"#0052cc", desc:"Connect to pull Issues, Epics, sprint velocity & board state" },
-];
+// (Config now inlined per-platform inside the integrations tab render)
 
 export default function App() {
   const [tab,          setTab]          = useState("data");
@@ -153,8 +151,118 @@ export default function App() {
   const [cards,        setCards]        = useState({});
   const [ctxInput,     setCtxInput]     = useState({});
   const [authorName,   setAuthorName]   = useState("");
-  const [integrations, setIntegrations] = useState({ado:{connected:false,url:"",token:""},jira:{connected:false,url:"",token:""}});
+  const [integrations, setIntegrations] = useState({
+    ado:  { connected:false, url:"", token:"", org:"",
+            testStatus:"idle", testMessage:"", testDetail:"" },
+    jira: { connected:false, url:"", token:"", email:"",
+            testStatus:"idle", testMessage:"", testDetail:"" },
+  });
   const [showIntModal, setShowIntModal] = useState(null);
+
+  // ── Integration helpers ────────────────────────────────────────────────────
+  const setIntField = (id, field, val) =>
+    setIntegrations(p => ({ ...p, [id]: { ...p[id], [field]: val } }));
+
+  const setTestStatus = (id, status, message="", detail="") =>
+    setIntegrations(p => ({ ...p, [id]: { ...p[id], testStatus:status, testMessage:message, testDetail:detail } }));
+
+  const testConnection = async (id) => {
+    const cfg = integrations[id];
+    setTestStatus(id, "testing", "Contacting server...");
+    try {
+      if (id === "ado") {
+        // ADO: Basic auth = base64(":PAT")
+        const b64 = btoa(":" + cfg.token);
+        const url = cfg.url.replace(/\/$/, "") + "/_apis/projects?api-version=7.0&$top=1";
+        const res = await fetch(url, {
+          headers: { "Authorization": "Basic " + b64, "Content-Type": "application/json" },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const proj = data?.value?.[0]?.name || "your organization";
+          setTestStatus(id, "success", `Connected! Found project: ${proj}`);
+          setIntField(id, "connected", true);
+        } else if (res.status === 401 || res.status === 403) {
+          setTestStatus(id, "auth", "Authentication failed — check your PAT and make sure it has Read permissions on Work Items.");
+        } else {
+          setTestStatus(id, "error", `Server returned ${res.status}. Check your organization URL.`);
+        }
+      } else if (id === "jira") {
+        // Jira Cloud: Basic auth = base64("email:api-token")
+        const b64 = btoa(cfg.email + ":" + cfg.token);
+        const base = cfg.url.replace(/\/$/, "");
+        const res = await fetch(`${base}/rest/api/3/myself`, {
+          headers: { "Authorization": "Basic " + b64, "Accept": "application/json" },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const name = data?.displayName || data?.emailAddress || cfg.email;
+          setTestStatus(id, "success", `Connected as ${name}!`);
+          setIntField(id, "connected", true);
+        } else if (res.status === 401 || res.status === 403) {
+          setTestStatus(id, "auth", "Authentication failed — check your email and API token.");
+        } else {
+          setTestStatus(id, "error", `Server returned ${res.status}. Check your Jira URL.`);
+        }
+      }
+    } catch(e) {
+      // TypeError: Failed to fetch = CORS block (expected for direct browser → ADO/Jira)
+      if (e instanceof TypeError && e.message.includes("fetch")) {
+        setTestStatus(id, "cors",
+          "CORS blocked — the API rejected the browser request directly.",
+          id === "ado"
+            ? "This is expected for Azure DevOps. In production, requests route through a backend proxy. Your credentials are saved — use Load Test Data to run a full analysis now."
+            : "Jira Cloud blocks direct browser requests. In production, requests route through a backend proxy. Your credentials are saved — use Load Test Data to run a full analysis now."
+        );
+        // Still mark as saved even if CORS blocks the live test
+        setIntField(id, "connected", true);
+      } else {
+        setTestStatus(id, "error", e.message);
+      }
+    }
+  };
+
+  const disconnectIntegration = (id) => {
+    setIntegrations(p => ({ ...p, [id]: {
+      ...p[id], connected:false, testStatus:"idle", testMessage:"", testDetail:""
+    }}));
+  };
+
+  // ── Test data generators ───────────────────────────────────────────────────
+  const ADO_TEST_DATA = `PBI #2201: Investment Portfolio Dashboard — Real-Time NAV Display [Closed] Effort: 8pts — Assigned: Sarah Chen | Cycle: 4 days
+PBI #2198: Security Master FX Rate Override UI [Closed] Effort: 5pts — Assigned: Mike Torres | Cycle: 3 days
+PBI #2187: Market Lens Export to CSV/Excel [Closed] Effort: 8pts — Assigned: Priya Nair | Cycle: 5 days
+PBI #2210: Report Builder Custom Date Range Filter [Active] Effort: 13pts — Assigned: Dev Team (carry to next sprint)
+PBI #2215: Solovis API Token Refresh Refactor [New] Effort: 21pts — Descoped: dependency on Platform team
+Task #2203: Update API docs for NAV endpoint [Closed] Effort: 2pts — Assigned: Sarah Chen
+Task #2199: FX field mapping QA validation [Closed] Effort: 3pts — Assigned: Priya Nair | Time in Dev Review: 2 days | Time in QA: 1 day
+Bug #2192: Portfolio report null reference on empty fund [Closed] P2 Effort: 3pts — Assigned: Mike Torres | Cycle: 2 days
+Bug #2205: Login session timeout too aggressive (15min) [Closed] P1 Effort: 2pts — Assigned: Mike Torres | Cycle: 1 day
+Bug #2209: iOS mobile layout broken on iPad landscape [Active] P2 Effort: 5pts — carry to next sprint
+Bug #2214: CSV export encoding issue — special chars [New] P3 Effort: 2pts
+Iteration: Sprint 44 | Team: Balrog Squad | Planned: 52pts | Completed: 31pts | Carry-over: 21pts
+Sprint dates: 2/24/2025 – 3/7/2025 | Team capacity: 80% (1 dev on PTO)`;
+
+  const JIRA_TEST_DATA = `BALROG-441: Investment Portfolio Dashboard — Real-Time NAV Display [Done] Story Points: 8 — Sarah Chen | Cycle time: 4 days
+BALROG-438: Security Master FX Rate Override UI [Done] Story Points: 5 — Mike Torres | Cycle time: 3 days
+BALROG-427: Market Lens Export to CSV/Excel [Done] Story Points: 8 — Priya Nair | Cycle time: 5 days
+BALROG-450: Report Builder Custom Date Range Filter [In Progress] Story Points: 13 — Dev Team (carried to next sprint)
+BALROG-455: Solovis API Token Refresh Refactor [To Do] Story Points: 21 — Descoped: blocked by Platform team
+BALROG-443: Update API docs for NAV endpoint [Done] Story Points: 2 — Sarah Chen
+BALROG-439: FX field mapping QA validation [Done] Story Points: 3 — Priya Nair | Time in Code Review: 2 days | Time in QA: 1 day
+BALROG-432: Portfolio report null reference on empty fund [Done] Bug Priority: Medium Story Points: 3 — Mike Torres
+BALROG-445: Login session timeout too aggressive (15min) [Done] Bug Priority: High Story Points: 2 — Mike Torres | Cycle: 1 day
+BALROG-449: iOS mobile layout broken on iPad landscape [In Progress] Bug Priority: Medium Story Points: 5 — carry to next sprint
+BALROG-454: CSV export encoding issue — special chars [To Do] Bug Priority: Low Story Points: 2
+Sprint: Sprint 44 | Board: Balrog Squad | Committed: 52pts | Completed: 31pts | Velocity (last 3): 38, 44, 31
+Sprint dates: 2/24/2025 – 3/7/2025 | Team capacity: 80% (1 dev on PTO)`;
+
+  const loadTestData = (id) => {
+    setSprintName("Sprint 44 — Test Data");
+    setNotes(`@sarah: NAV dashboard shipped — clients love the real-time refresh, big win!\n@mike: P1 session timeout bug was painful, hit prod Friday night. Need better UAT coverage.\n@priya: FX override blocked waiting on IT access for 2 days — same blocker as last sprint.\n@dev: Platform team API still not ready, had to descope BALROG-455/PBI #2215 again.\n@team: capacity was rough with Jordan on PTO, affected velocity\nStandup 2/26: Mike still blocked on env access for iOS testing\nStandup 2/28: P1 bug #2205/BALROG-445 fixed and deployed to prod, all clear\nRetro pre-notes: context switching between squads killing our focus time`);
+    setWorkItems(id === "ado" ? ADO_TEST_DATA : JIRA_TEST_DATA);
+    setTab("data");
+  };
 
   // ── Archive state ──────────────────────────────────────────────────────────
   const [archive,       setArchive]      = useState(() => {
@@ -927,81 +1035,142 @@ ${workItems || "None provided"}`;
             {/* ══════════ INTEGRATIONS TAB ══════════ */}
             {tab==="connect" && (
               <>
-                <div className="card" style={{marginBottom:24,padding:"18px 22px",background:"rgba(245,158,11,0.04)",borderColor:"rgba(245,158,11,0.15)"}}>
-                  <div className="card-title" style={{color:"#f59e0b",marginBottom:8}}><Icon path={IC.plug} size={14} color="#f59e0b"/>Platform Integrations</div>
+                <div className="card" style={{marginBottom:20,padding:"16px 20px",background:"rgba(245,158,11,0.04)",borderColor:"rgba(245,158,11,0.15)"}}>
+                  <div className="card-title" style={{color:"#f59e0b",marginBottom:6}}><Icon path={IC.plug} size={14} color="#f59e0b"/>Platform Integrations</div>
                   <p style={{fontSize:13,color:"#64748b",lineHeight:1.7}}>
-                    Connect ADO or Jira to automatically pull work item data, cycle times, and lane duration metrics (time in Dev Review, QA, etc). Until connected, paste work item data manually in the Sprint Data tab.
+                    Connect ADO or Jira to pull live sprint data — PBIs, cycle times, and lane durations. Use <strong style={{color:"#94a3b8"}}>Load Test Data</strong> to run a full analysis with realistic sample data right now, no connection required.
                   </p>
                 </div>
+
                 <div className="two-col">
-                  {INTEGRATIONS.map(int => {
+                  {[
+                    { id:"ado",  label:"Azure DevOps", color:"#0078d4",
+                      urlPlaceholder:"https://dev.azure.com/your-org",
+                      tokenLabel:"Personal Access Token (PAT)",
+                      tokenPlaceholder:"Paste your ADO PAT here...",
+                      tokenHint:"Needs: Work Items (Read), Project (Read)",
+                      features:["Auto-pull PBIs, Bugs, Tasks from current iteration","Effort points & state per item","Time in Dev Review lane","Time in QA / Testing lane","Sprint velocity — last 6 iterations"] },
+                    { id:"jira", label:"Jira Cloud", color:"#0052cc",
+                      urlPlaceholder:"https://your-org.atlassian.net",
+                      tokenLabel:"API Token",
+                      tokenPlaceholder:"Paste your Jira API token here...",
+                      tokenHint:"Generate at: id.atlassian.com/manage-profile/security/api-tokens",
+                      features:["Auto-pull Issues, Bugs, Epics from active sprint","Story points & status per issue","Time in Code Review lane","Time in QA / Testing lane","Sprint velocity — last 6 sprints"] },
+                  ].map(int => {
                     const cfg = integrations[int.id];
+                    const ts  = cfg.testStatus;
+                    const statusColor = {idle:"#475569",testing:"#f59e0b",success:"#4ade80",cors:"#60a5fa",auth:"#f87171",error:"#f87171"}[ts]||"#475569";
+                    const statusBg    = {idle:"rgba(255,255,255,0.02)",testing:"rgba(245,158,11,0.05)",success:"rgba(34,197,94,0.06)",cors:"rgba(59,130,246,0.06)",auth:"rgba(239,68,68,0.06)",error:"rgba(239,68,68,0.06)"}[ts]||"rgba(255,255,255,0.02)";
+                    const statusBorder= {idle:"rgba(255,255,255,0.08)",testing:"rgba(245,158,11,0.2)",success:"rgba(34,197,94,0.25)",cors:"rgba(59,130,246,0.25)",auth:"rgba(239,68,68,0.25)",error:"rgba(239,68,68,0.25)"}[ts]||"rgba(255,255,255,0.08)";
+
                     return (
-                      <div key={int.id} className="card" style={{borderColor: cfg.connected ? `${int.color}44` : "rgba(255,255,255,0.08)"}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+                      <div key={int.id} className="card" style={{borderColor: cfg.connected ? `${int.color}55` : "rgba(255,255,255,0.08)"}}>
+                        {/* Header */}
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
                           <div>
-                            <div style={{fontSize:16,fontWeight:800,color:"#fff",marginBottom:4}}>{int.label}</div>
-                            <p style={{fontSize:12,color:"#64748b",lineHeight:1.6}}>{int.desc}</p>
-                          </div>
-                          {cfg.connected
-                            ? <span className="badge b-teal"><Icon path={IC.check} size={10}/>Connected</span>
-                            : <span className="badge b-amber">Not Connected</span>}
-                        </div>
-                        {cfg.connected ? (
-                          <div>
-                            <div style={{fontSize:11,color:"#64748b",fontFamily:"Space Mono",marginBottom:12}}>
-                              Connected to: {cfg.url}
+                            <div style={{fontSize:17,fontWeight:800,color:"#fff",marginBottom:3}}>{int.label}</div>
+                            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                              {cfg.connected && ts==="success" && <span className="badge b-teal"><Icon path={IC.check} size={10}/>Live</span>}
+                              {cfg.connected && ts==="cors"    && <span className="badge b-blue"><Icon path={IC.check} size={10}/>Saved</span>}
+                              {!cfg.connected && ts==="idle"   && <span className="badge b-amber">Not Connected</span>}
+                              {ts==="auth"  && <span className="badge b-red">Auth Failed</span>}
+                              {ts==="error" && <span className="badge b-red">Error</span>}
+                              {ts==="testing"&& <span className="badge b-amber">Testing...</span>}
                             </div>
-                            <div style={{background:"rgba(20,184,166,0.05)",border:"1px solid rgba(20,184,166,0.15)",borderRadius:8,padding:"12px 14px",marginBottom:12}}>
-                              <div style={{fontSize:11,color:"#4ade80",fontFamily:"Space Mono",marginBottom:8,textTransform:"uppercase",letterSpacing:".08em"}}>Available once connected</div>
-                              {["Auto-pull PBIs, Bugs, Tasks from current sprint","Cycle time per work item (Active → Closed)","Time in Dev Review lane","Time in QA / Testing lane","Sprint velocity history (last 6 sprints)"].map(f=>(
-                                <div key={f} style={{display:"flex",gap:8,alignItems:"center",fontSize:12,color:"#94a3b8",marginBottom:5}}>
+                          </div>
+                          <div style={{width:36,height:36,borderRadius:8,background:`${int.color}22`,border:`1px solid ${int.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:int.color,fontFamily:"Space Mono",letterSpacing:"-.02em",flexShrink:0}}>
+                            {int.id==="ado"?"ADO":"JIRA"}
+                          </div>
+                        </div>
+
+                        {/* Test status banner */}
+                        {ts!=="idle" && (
+                          <div style={{background:statusBg,border:`1px solid ${statusBorder}`,borderRadius:8,padding:"10px 14px",marginBottom:14}}>
+                            <div style={{fontSize:12,fontWeight:700,color:statusColor,marginBottom:cfg.testDetail?4:0}}>
+                              {ts==="testing" && <span style={{display:"inline-flex",alignItems:"center",gap:6}}><Icon path={IC.loader} size={12} color={statusColor} className="spin"/>Testing connection...</span>}
+                              {ts!=="testing" && cfg.testMessage}
+                            </div>
+                            {cfg.testDetail && <div style={{fontSize:11,color:"#64748b",lineHeight:1.6}}>{cfg.testDetail}</div>}
+                          </div>
+                        )}
+
+                        {/* Credentials form — always shown unless live-connected */}
+                        {(!cfg.connected || ts==="auth" || ts==="error") && (
+                          <div>
+                            <div style={{marginBottom:10}}>
+                              <span className="lbl">Instance URL</span>
+                              <input type="text" value={cfg.url} placeholder={int.urlPlaceholder}
+                                onChange={e=>setIntField(int.id,"url",e.target.value)}/>
+                            </div>
+                            {int.id==="jira" && (
+                              <div style={{marginBottom:10}}>
+                                <span className="lbl">Atlassian Account Email</span>
+                                <input type="text" value={cfg.email||""} placeholder="you@company.com"
+                                  onChange={e=>setIntField(int.id,"email",e.target.value)}/>
+                              </div>
+                            )}
+                            <div style={{marginBottom:6}}>
+                              <span className="lbl">{int.tokenLabel}</span>
+                              <input type="password" value={cfg.token} placeholder={int.tokenPlaceholder}
+                                onChange={e=>setIntField(int.id,"token",e.target.value)}/>
+                            </div>
+                            <div style={{fontSize:10,color:"#475569",fontFamily:"Space Mono",marginBottom:14}}>{int.tokenHint}</div>
+                            <button className="btn btn-sm" style={{background:`linear-gradient(135deg,${int.color},${int.color}bb)`,color:"#fff",width:"100%",justifyContent:"center"}}
+                              onClick={()=>testConnection(int.id)}
+                              disabled={ts==="testing" || !cfg.url || !cfg.token || (int.id==="jira" && !cfg.email)}>
+                              {ts==="testing"
+                                ? <><Icon path={IC.loader} size={12} color="#fff" className="spin"/>Testing...</>
+                                : <><Icon path={IC.plug} size={12} color="#fff"/>Test Connection</>}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Connected state */}
+                        {cfg.connected && ts!=="auth" && ts!=="error" && (
+                          <div>
+                            <div style={{fontSize:11,color:"#475569",fontFamily:"Space Mono",marginBottom:12,wordBreak:"break-all"}}>{cfg.url}</div>
+                            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:8,padding:"10px 14px",marginBottom:14}}>
+                              <div style={{fontSize:10,color:"#475569",fontFamily:"Space Mono",textTransform:"uppercase",letterSpacing:".08em",marginBottom:8}}>Will pull automatically</div>
+                              {int.features.map(f=>(
+                                <div key={f} style={{display:"flex",gap:8,alignItems:"center",fontSize:12,color:"#64748b",marginBottom:5}}>
                                   <Icon path={IC.check} size={11} color="#4ade80"/>{f}
                                 </div>
                               ))}
                             </div>
-                            <button className="btn btn-red btn-sm" onClick={()=>setIntegrations(prev=>({...prev,[int.id]:{...prev[int.id],connected:false}}))}>
-                              Disconnect
-                            </button>
-                          </div>
-                        ) : (
-                          <div>
-                            <div style={{background:"rgba(255,255,255,0.02)",border:"1px dashed rgba(255,255,255,0.08)",borderRadius:8,padding:"12px 14px",marginBottom:14}}>
-                              <div style={{fontSize:11,color:"#64748b",fontFamily:"Space Mono",marginBottom:8,textTransform:"uppercase",letterSpacing:".08em"}}>Will unlock</div>
-                              {["Auto-pull PBIs, Bugs, Tasks from current sprint","Cycle time per work item (Active → Closed)","Time in Dev Review lane","Time in QA / Testing lane","Sprint velocity history (last 6 sprints)"].map(f=>(
-                                <div key={f} style={{display:"flex",gap:8,alignItems:"center",fontSize:12,color:"#475569",marginBottom:5}}>
-                                  <Icon path={IC.link} size={11} color="#475569"/>{f}
-                                </div>
-                              ))}
+                            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                              <button className="btn btn-ghost btn-sm" onClick={()=>testConnection(int.id)} disabled={ts==="testing"}>
+                                <Icon path={IC.refresh} size={11}/>Re-test
+                              </button>
+                              <button className="btn btn-red btn-sm" onClick={()=>disconnectIntegration(int.id)}>
+                                <Icon path={IC.trash} size={11}/>Disconnect
+                              </button>
                             </div>
-                            <div style={{marginBottom:10}}>
-                              <span className="lbl">{int.label} Instance URL</span>
-                              <input type="text" value={cfg.url} placeholder={`https://dev.azure.com/yourorg` }
-                                onChange={e=>setIntegrations(prev=>({...prev,[int.id]:{...prev[int.id],url:e.target.value}}))}/>
-                            </div>
-                            <div style={{marginBottom:14}}>
-                              <span className="lbl">Personal Access Token (PAT)</span>
-                              <input type="password" value={cfg.token} placeholder="Paste your PAT here..."
-                                onChange={e=>setIntegrations(prev=>({...prev,[int.id]:{...prev[int.id],token:e.target.value}}))}/>
-                            </div>
-                            <button className="btn btn-primary" style={{background:`linear-gradient(135deg,${int.color},${int.color}cc)`}}
-                              onClick={()=>saveIntegration(int.id)}
-                              disabled={!cfg.url||!cfg.token}>
-                              <Icon path={IC.plug} size={13} color="#fff"/>Save & Connect {int.label}
-                            </button>
                           </div>
                         )}
+
+                        {/* Load test data — always available */}
+                        <div style={{marginTop:16,paddingTop:14,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+                          <div style={{fontSize:10,color:"#475569",fontFamily:"Space Mono",textTransform:"uppercase",letterSpacing:".08em",marginBottom:8}}>
+                            {int.id==="ado" ? "ADO-formatted" : "Jira-formatted"} · Realistic sample · Balrog Squad
+                          </div>
+                          <button className="btn btn-ghost btn-sm" style={{width:"100%",justifyContent:"center",borderColor:`${int.color}44`,color:int.id==="ado"?"#60a5fa":"#818cf8"}}
+                            onClick={()=>loadTestData(int.id)}>
+                            <Icon path={IC.zap} size={12}/>Load Test Data → Run Analysis
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-                <div className="card" style={{background:"rgba(255,255,255,0.02)",borderColor:"rgba(255,255,255,0.05)"}}>
-                  <div className="card-title" style={{marginBottom:10,color:"#475569"}}>
-                    <Icon path={IC.eye} size={13} color="#475569"/>Integration Roadmap
+
+                {/* Roadmap */}
+                <div className="card" style={{background:"rgba(255,255,255,0.01)",borderColor:"rgba(255,255,255,0.05)"}}>
+                  <div className="card-title" style={{marginBottom:10,color:"#334155"}}>
+                    <Icon path={IC.eye} size={13} color="#334155"/>Integration Roadmap
                   </div>
-                  <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-                    {["GitHub (PR cycle time)","ServiceNow (incident correlation)","Confluence (documentation linkage)","Power BI (velocity dashboards)","Slack (channel notes auto-import)"].map(f=>(
-                      <span key={f} className="badge" style={{background:"rgba(255,255,255,0.03)",color:"#475569",border:"1px dashed rgba(255,255,255,0.08)",fontSize:11}}>{f}</span>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    {["GitHub (PR cycle time)","ServiceNow (incident correlation)","Confluence (doc linkage)","Power BI (velocity dashboards)","Slack (channel notes auto-import)"].map(f=>(
+                      <span key={f} className="badge" style={{background:"rgba(255,255,255,0.02)",color:"#334155",border:"1px dashed rgba(255,255,255,0.06)",fontSize:11}}>{f}</span>
                     ))}
                   </div>
                 </div>
