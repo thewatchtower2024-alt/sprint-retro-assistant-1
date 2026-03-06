@@ -229,29 +229,29 @@ export default function App() {
   };
 
   // ── Test data generators ───────────────────────────────────────────────────
-  const ADO_TEST_DATA = `PBI #2201: Investment Portfolio Dashboard — Real-Time NAV Display [Closed] Effort: 8pts — Assigned: Sarah Chen | Cycle: 4 days
-PBI #2198: Security Master FX Rate Override UI [Closed] Effort: 5pts — Assigned: Mike Torres | Cycle: 3 days
-PBI #2187: Market Lens Export to CSV/Excel [Closed] Effort: 8pts — Assigned: Priya Nair | Cycle: 5 days
+  const ADO_TEST_DATA = `PBI #2201: Investment Portfolio Dashboard — Real-Time NAV Display [Closed] Effort: 8pts — Assigned: Avery Brooks | Cycle: 4 days
+PBI #2198: Security Master FX Rate Override UI [Closed] Effort: 5pts — Assigned: Marcus Webb | Cycle: 3 days
+PBI #2187: Market Lens Export to CSV/Excel [Closed] Effort: 8pts — Assigned: Casey Nguyen | Cycle: 5 days
 PBI #2210: Report Builder Custom Date Range Filter [Active] Effort: 13pts — Assigned: Dev Team (carry to next sprint)
-PBI #2215: Solovis API Token Refresh Refactor [New] Effort: 21pts — Descoped: dependency on Platform team
-Task #2203: Update API docs for NAV endpoint [Closed] Effort: 2pts — Assigned: Sarah Chen
-Task #2199: FX field mapping QA validation [Closed] Effort: 3pts — Assigned: Priya Nair | Time in Dev Review: 2 days | Time in QA: 1 day
-Bug #2192: Portfolio report null reference on empty fund [Closed] P2 Effort: 3pts — Assigned: Mike Torres | Cycle: 2 days
-Bug #2205: Login session timeout too aggressive (15min) [Closed] P1 Effort: 2pts — Assigned: Mike Torres | Cycle: 1 day
+PBI #2215: Apex Platform API Token Refresh Refactor [New] Effort: 21pts — Descoped: dependency on Platform team
+Task #2203: Update API docs for NAV endpoint [Closed] Effort: 2pts — Assigned: Avery Brooks
+Task #2199: FX field mapping QA validation [Closed] Effort: 3pts — Assigned: Casey Nguyen | Time in Dev Review: 2 days | Time in QA: 1 day
+Bug #2192: Portfolio report null reference on empty fund [Closed] P2 Effort: 3pts — Assigned: Marcus Webb | Cycle: 2 days
+Bug #2205: Login session timeout too aggressive (15min) [Closed] P1 Effort: 2pts — Assigned: Marcus Webb | Cycle: 1 day
 Bug #2209: iOS mobile layout broken on iPad landscape [Active] P2 Effort: 5pts — carry to next sprint
 Bug #2214: CSV export encoding issue — special chars [New] P3 Effort: 2pts
 Iteration: Sprint 44 | Team: Balrog Squad | Planned: 52pts | Completed: 31pts | Carry-over: 21pts
 Sprint dates: 2/24/2025 – 3/7/2025 | Team capacity: 80% (1 dev on PTO)`;
 
-  const JIRA_TEST_DATA = `BALROG-441: Investment Portfolio Dashboard — Real-Time NAV Display [Done] Story Points: 8 — Sarah Chen | Cycle time: 4 days
-BALROG-438: Security Master FX Rate Override UI [Done] Story Points: 5 — Mike Torres | Cycle time: 3 days
-BALROG-427: Market Lens Export to CSV/Excel [Done] Story Points: 8 — Priya Nair | Cycle time: 5 days
+  const JIRA_TEST_DATA = `BALROG-441: Investment Portfolio Dashboard — Real-Time NAV Display [Done] Story Points: 8 — Avery Brooks | Cycle time: 4 days
+BALROG-438: Security Master FX Rate Override UI [Done] Story Points: 5 — Marcus Webb | Cycle time: 3 days
+BALROG-427: Market Lens Export to CSV/Excel [Done] Story Points: 8 — Casey Nguyen | Cycle time: 5 days
 BALROG-450: Report Builder Custom Date Range Filter [In Progress] Story Points: 13 — Dev Team (carried to next sprint)
-BALROG-455: Solovis API Token Refresh Refactor [To Do] Story Points: 21 — Descoped: blocked by Platform team
-BALROG-443: Update API docs for NAV endpoint [Done] Story Points: 2 — Sarah Chen
-BALROG-439: FX field mapping QA validation [Done] Story Points: 3 — Priya Nair | Time in Code Review: 2 days | Time in QA: 1 day
-BALROG-432: Portfolio report null reference on empty fund [Done] Bug Priority: Medium Story Points: 3 — Mike Torres
-BALROG-445: Login session timeout too aggressive (15min) [Done] Bug Priority: High Story Points: 2 — Mike Torres | Cycle: 1 day
+BALROG-455: Apex Platform API Token Refresh Refactor [To Do] Story Points: 21 — Descoped: blocked by Platform team
+BALROG-443: Update API docs for NAV endpoint [Done] Story Points: 2 — Avery Brooks
+BALROG-439: FX field mapping QA validation [Done] Story Points: 3 — Casey Nguyen | Time in Code Review: 2 days | Time in QA: 1 day
+BALROG-432: Portfolio report null reference on empty fund [Done] Bug Priority: Medium Story Points: 3 — Marcus Webb
+BALROG-445: Login session timeout too aggressive (15min) [Done] Bug Priority: High Story Points: 2 — Marcus Webb | Cycle: 1 day
 BALROG-449: iOS mobile layout broken on iPad landscape [In Progress] Bug Priority: Medium Story Points: 5 — carry to next sprint
 BALROG-454: CSV export encoding issue — special chars [To Do] Bug Priority: Low Story Points: 2
 Sprint: Sprint 44 | Board: Balrog Squad | Committed: 52pts | Completed: 31pts | Velocity (last 3): 38, 44, 31
@@ -259,7 +259,7 @@ Sprint dates: 2/24/2025 – 3/7/2025 | Team capacity: 80% (1 dev on PTO)`;
 
   const loadTestData = (id) => {
     setSprintName("Sprint 44 — Test Data");
-    setNotes(`@sarah: NAV dashboard shipped — clients love the real-time refresh, big win!\n@mike: P1 session timeout bug was painful, hit prod Friday night. Need better UAT coverage.\n@priya: FX override blocked waiting on IT access for 2 days — same blocker as last sprint.\n@dev: Platform team API still not ready, had to descope BALROG-455/PBI #2215 again.\n@team: capacity was rough with Jordan on PTO, affected velocity\nStandup 2/26: Mike still blocked on env access for iOS testing\nStandup 2/28: P1 bug #2205/BALROG-445 fixed and deployed to prod, all clear\nRetro pre-notes: context switching between squads killing our focus time`);
+    setNotes(`@avery: NAV dashboard shipped — clients love the real-time refresh, big win!\n@marcus: P1 session timeout bug was painful, hit prod Friday night. Need better UAT coverage.\n@casey: FX override blocked waiting on IT access for 2 days — same blocker as last sprint.\n@dev: Platform team API still not ready, had to descope BALROG-455/PBI #2215 again.\n@team: capacity was rough with Devon on PTO, affected velocity\nStandup 2/26: Marcus still blocked on env access for iOS testing\nStandup 2/28: P1 bug #2205/BALROG-445 fixed and deployed to prod, all clear\nRetro pre-notes: context switching between squads killing our focus time`);
     setWorkItems(id === "ado" ? ADO_TEST_DATA : JIRA_TEST_DATA);
     setTab("data");
   };
