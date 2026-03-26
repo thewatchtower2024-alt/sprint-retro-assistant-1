@@ -52,78 +52,81 @@ const IC = {
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#0a0c10;}
-  .app{min-height:100vh;background:#0a0c10;color:#e2e8f0;font-family:'Syne',sans-serif;position:relative;overflow-x:hidden;}
-  .app::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 20% 10%,rgba(245,158,11,0.06) 0%,transparent 60%),radial-gradient(ellipse 50% 50% at 80% 80%,rgba(20,184,166,0.06) 0%,transparent 60%);pointer-events:none;z-index:0;}
-  .grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(245,158,11,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(245,158,11,0.04) 1px,transparent 1px);background-size:40px 40px;z-index:0;pointer-events:none;}
+  body{background:#f0f2f5;}
+  .app{min-height:100vh;background:#f0f2f5;color:#1e293b;font-family:'Syne',sans-serif;position:relative;overflow-x:hidden;}
   .content{position:relative;z-index:1;}
-  .hdr{border-bottom:1px solid rgba(245,158,11,0.2);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;background:rgba(10,12,16,0.85);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:12px;}
+  .hdr{border-bottom:1px solid rgba(0,0,0,0.08);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;background:#ffffff;position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
   .hdr-left{display:flex;align-items:center;gap:14px;}
-  .logo{background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:8px;padding:7px 11px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:#0a0c10;letter-spacing:.1em;}
-  .hdr-title{font-size:18px;font-weight:800;color:#fff;}
-  .hdr-title span{color:#f59e0b;}
-  .hdr-sub{font-family:'Space Mono',monospace;font-size:10px;color:#64748b;margin-top:2px;}
-  .sprint-badge{background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.3);border-radius:6px;padding:5px 12px;font-family:'Space Mono',monospace;font-size:12px;color:#14b8a6;display:flex;align-items:center;gap:8px;}
-  .dot{width:6px;height:6px;border-radius:50%;background:#14b8a6;animation:pulse 2s infinite;}
+  .logo{background:linear-gradient(135deg,#d97706,#b45309);border-radius:8px;padding:7px 11px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:#fff;letter-spacing:.1em;}
+  .hdr-title{font-size:18px;font-weight:800;color:#0f172a;}
+  .hdr-title span{color:#d97706;}
+  .hdr-sub{font-family:'Space Mono',monospace;font-size:10px;color:#9ca3af;margin-top:2px;}
+  .sprint-badge{background:rgba(13,148,136,0.08);border:1px solid rgba(13,148,136,0.25);border-radius:6px;padding:5px 12px;font-family:'Space Mono',monospace;font-size:12px;color:#0d9488;display:flex;align-items:center;gap:8px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:#0d9488;animation:pulse 2s infinite;}
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
   @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-  .nav{display:flex;gap:2px;padding:16px 28px 0;border-bottom:1px solid rgba(255,255,255,0.06);overflow-x:auto;}
-  .tab{padding:9px 18px;border:none;background:transparent;color:#64748b;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:7px;white-space:nowrap;}
-  .tab:hover{color:#94a3b8;}
-  .tab.on{color:#f59e0b;border-bottom-color:#f59e0b;}
+  .nav{display:flex;gap:2px;padding:0 28px;border-bottom:1px solid rgba(0,0,0,0.08);background:#fff;overflow-x:auto;}
+  .tab{padding:12px 18px;border:none;background:transparent;color:#6b7280;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:7px;white-space:nowrap;}
+  .tab:hover{color:#374151;}
+  .tab.on{color:#d97706;border-bottom-color:#d97706;}
   .main{padding:28px;max-width:1400px;margin:0 auto;}
-  .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:22px;margin-bottom:18px;transition:border-color .2s;}
-  .card:hover{border-color:rgba(245,158,11,0.15);}
-  .card-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
-  .lbl{font-family:'Space Mono',monospace;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;display:block;}
-  textarea,input[type=text],input[type=password]{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:11px 14px;color:#e2e8f0;font-family:'Space Mono',monospace;font-size:12px;line-height:1.7;resize:vertical;transition:border-color .2s;outline:none;}
-  textarea:focus,input:focus{border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.03);}
-  textarea::placeholder,input::placeholder{color:#334155;}
+  .card{background:#ffffff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:22px;margin-bottom:18px;transition:border-color .2s,box-shadow .2s;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+  .card:hover{border-color:rgba(217,119,6,0.2);box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  .card-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .lbl{font-family:'Space Mono',monospace;font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;display:block;}
+  textarea,input[type=text],input[type=password]{width:100%;background:#f8fafc;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:11px 14px;color:#1e293b;font-family:'Space Mono',monospace;font-size:12px;line-height:1.7;resize:vertical;transition:border-color .2s;outline:none;}
+  textarea:focus,input:focus{border-color:rgba(217,119,6,0.5);background:#fffbf0;}
+  textarea::placeholder,input::placeholder{color:#cbd5e1;}
   .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;transition:all .2s;white-space:nowrap;}
-  .btn-primary{background:linear-gradient(135deg,#f59e0b,#d97706);color:#0a0c10;}
-  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(245,158,11,.3);}
+  .btn-primary{background:linear-gradient(135deg,#d97706,#b45309);color:#fff;}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(217,119,6,.3);}
   .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;}
-  .btn-ghost{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;}
-  .btn-ghost:hover{background:rgba(255,255,255,0.08);color:#e2e8f0;}
-  .btn-teal{background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.3);color:#14b8a6;}
-  .btn-red{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;}
+  .btn-ghost{background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.1);color:#6b7280;}
+  .btn-ghost:hover{background:rgba(0,0,0,0.07);color:#374151;}
+  .btn-teal{background:rgba(13,148,136,0.08);border:1px solid rgba(13,148,136,0.25);color:#0d9488;}
+  .btn-red{background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.18);color:#dc2626;}
   .btn-sm{padding:5px 10px;font-size:11px;}
   .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
-  .b-teal{background:rgba(20,184,166,0.15);color:#14b8a6;border:1px solid rgba(20,184,166,0.2);}
-  .b-red{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.2);}
-  .b-amber{background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);}
-  .b-purple{background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.2);}
-  .b-blue{background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.2);}
-  .b-green{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.2);}
+  .b-teal{background:rgba(13,148,136,0.1);color:#0d9488;border:1px solid rgba(13,148,136,0.2);}
+  .b-red{background:rgba(239,68,68,0.08);color:#dc2626;border:1px solid rgba(239,68,68,0.18);}
+  .b-amber{background:rgba(217,119,6,0.1);color:#d97706;border:1px solid rgba(217,119,6,0.2);}
+  .b-purple{background:rgba(124,58,237,0.08);color:#7c3aed;border:1px solid rgba(124,58,237,0.2);}
+  .b-blue{background:rgba(37,99,235,0.08);color:#2563eb;border:1px solid rgba(37,99,235,0.18);}
+  .b-green{background:rgba(22,163,74,0.08);color:#16a34a;border:1px solid rgba(22,163,74,0.18);}
   .spin{animation:spin 1s linear infinite;}
-  .empty{text-align:center;padding:56px 24px;color:#334155;font-family:'Space Mono',monospace;font-size:13px;line-height:1.8;}
-  .status-bar{background:rgba(20,184,166,0.05);border:1px solid rgba(20,184,166,0.15);border-radius:8px;padding:10px 16px;font-family:'Space Mono',monospace;font-size:11px;color:#14b8a6;margin-bottom:20px;display:flex;align-items:flex-start;gap:8px;line-height:1.7;}
-  .health-green{background:rgba(34,197,94,0.07);border-color:rgba(34,197,94,0.25);color:#4ade80;}
-  .health-yellow{background:rgba(245,158,11,0.07);border-color:rgba(245,158,11,0.25);color:#f59e0b;}
-  .health-red{background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.25);color:#f87171;}
+  .empty{text-align:center;padding:56px 24px;color:#9ca3af;font-family:'Space Mono',monospace;font-size:13px;line-height:1.8;}
+  .status-bar{background:rgba(13,148,136,0.05);border:1px solid rgba(13,148,136,0.18);border-radius:8px;padding:10px 16px;font-family:'Space Mono',monospace;font-size:11px;color:#0d9488;margin-bottom:20px;display:flex;align-items:flex-start;gap:8px;line-height:1.7;}
+  .health-green{background:rgba(22,163,74,0.07);border-color:rgba(22,163,74,0.25);color:#16a34a;}
+  .health-yellow{background:rgba(217,119,6,0.07);border-color:rgba(217,119,6,0.25);color:#d97706;}
+  .health-red{background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.25);color:#dc2626;}
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
   .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;}
-  .ai-row{padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;color:#cbd5e1;line-height:1.6;display:flex;gap:10px;align-items:flex-start;}
+  .ai-row{padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:13px;color:#374151;line-height:1.6;display:flex;gap:10px;align-items:flex-start;}
   .ai-row:last-child{border-bottom:none;}
-  .bullet-teal{color:#14b8a6;font-size:16px;line-height:1.5;flex-shrink:0;}
-  .bullet-red{color:#f87171;font-size:16px;line-height:1.5;flex-shrink:0;}
-  .bullet-amber{color:#f59e0b;font-size:16px;line-height:1.5;flex-shrink:0;}
-  .bullet-purple{color:#c084fc;font-size:16px;line-height:1.5;flex-shrink:0;}
-  .bullet-blue{color:#60a5fa;font-size:16px;line-height:1.5;flex-shrink:0;}
-  .divider{display:flex;align-items:center;gap:10px;margin:20px 0 14px;color:#475569;font-family:'Space Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;}
-  .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06);}
+  .bullet-teal{color:#0d9488;font-size:16px;line-height:1.5;flex-shrink:0;}
+  .bullet-red{color:#dc2626;font-size:16px;line-height:1.5;flex-shrink:0;}
+  .bullet-amber{color:#d97706;font-size:16px;line-height:1.5;flex-shrink:0;}
+  .bullet-purple{color:#7c3aed;font-size:16px;line-height:1.5;flex-shrink:0;}
+  .bullet-blue{color:#2563eb;font-size:16px;line-height:1.5;flex-shrink:0;}
+  .divider{display:flex;align-items:center;gap:10px;margin:20px 0 14px;color:#9ca3af;font-family:'Space Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(0,0,0,0.08);}
   .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;}
-  .m-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;text-align:center;}
-  .m-val{font-size:32px;font-weight:800;color:#f59e0b;line-height:1;margin-bottom:3px;}
-  .m-lbl{font-family:'Space Mono',monospace;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.1em;}
-  .m-sub{font-size:11px;color:#475569;margin-top:5px;}
-  .m-card.c-teal .m-val{color:#14b8a6;}
-  .m-card.c-red  .m-val{color:#f87171;}
-  .m-card.c-purple .m-val{color:#c084fc;}
-  .m-card.c-blue .m-val{color:#60a5fa;}
-  .m-card.c-green .m-val{color:#4ade80;}
-  .prog{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-top:7px;}
+  .m-card{background:#ffffff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:18px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+  .m-val{font-size:32px;font-weight:800;color:#d97706;line-height:1;margin-bottom:3px;}
+  .m-lbl{font-family:'Space Mono',monospace;font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;}
+  .m-sub{font-size:11px;color:#9ca3af;margin-top:5px;}
+  .m-card.c-teal .m-val{color:#0d9488;}
+  .m-card.c-red  .m-val{color:#dc2626;}
+  .m-card.c-purple .m-val{color:#7c3aed;}
+  .m-card.c-blue .m-val{color:#2563eb;}
+  .m-card.c-green .m-val{color:#16a34a;}
+  .prog{height:5px;background:rgba(0,0,0,0.07);border-radius:3px;overflow:hidden;margin-top:7px;}
   .prog-fill{height:100%;border-radius:3px;transition:width .8s ease;}
+  .theme-card{background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:10px;padding:16px 20px;margin-bottom:12px;border-left:4px solid;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+  .theme-title{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:6px;}
+  .theme-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+  .theme-desc{font-size:13px;color:#6b7280;line-height:1.6;margin-bottom:8px;}
+  .theme-action{font-size:12px;color:#374151;background:rgba(0,0,0,0.03);border-radius:6px;padding:8px 12px;font-style:italic;border-left:2px solid #d97706;}
   @media(max-width:900px){.two-col,.three-col{grid-template-columns:1fr}.main{padding:16px}.hdr{padding:12px 16px}}
 `;
 
@@ -271,7 +274,63 @@ Sprint dates: 2/24/2025 – 3/7/2025 | Team capacity: 80% (1 dev on PTO)`;
   });
   const [archiveFilter, setArchiveFilter] = useState("");
   const [archiveSort,   setArchiveSort]   = useState("newest");
-  const [confirmDelete, setConfirmDelete] = useState(null); // id to confirm
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  // ── Theme tracking state ────────────────────────────────────────────────────
+  const [themes,       setThemes]       = useState(() => {
+    try { return JSON.parse(localStorage.getItem("retro-themes") || "[]"); }
+    catch { return []; }
+  });
+  const [themeLoading, setThemeLoading] = useState(false);
+
+  const analyzeThemes = useCallback(async () => {
+    if (archive.length < 2) return;
+    if (!apiKey) { alert("Please enter your Anthropic API key first."); return; }
+    setThemeLoading(true);
+    const sprintSummaries = archive.slice(0, 10).map(e => {
+      const tp = e.result?.talkingPoints || {};
+      const allItems = [
+        ...(tp.bad || []).map(c => `BAD: ${c.text}`),
+        ...(tp.change || []).map(c => `CHANGE: ${c.text}`),
+        ...(tp.actionItems || []).map(c => `ACTION: ${c.text}`),
+        ...(tp.good || []).map(c => `GOOD: ${c.text}`),
+      ];
+      return `Sprint: ${e.sprintName} (${e.savedAt?.slice(0,10)})\n${allItems.join("\n")}`;
+    }).join("\n\n---\n\n");
+
+    const prompt = `Analyze the following retrospective summaries from ${archive.length} sprints and identify recurring themes — patterns that appear across 2 or more sprints.
+Return ONLY valid JSON, no markdown, no explanation:
+{
+  "themes": [
+    {
+      "id": "t1",
+      "title": "Short descriptive theme name (5 words max)",
+      "category": "Process|Technical|Team|Communication|Delivery|Quality",
+      "severity": "high|medium|low",
+      "sprintCount": 2,
+      "firstSeen": "Sprint name",
+      "trend": "improving|worsening|stable",
+      "description": "2 sentences describing the pattern and its impact",
+      "recommendedAction": "Specific, actionable recommendation for the next sprint"
+    }
+  ]
+}
+
+Sprint data:
+${sprintSummaries}`;
+    try {
+      const raw = await callClaude(
+        "You are an expert Agile coach. Analyze multi-sprint retrospective data and identify recurring themes. Return ONLY valid JSON.",
+        prompt, apiKey, 2000
+      );
+      const parsed = parseJSON(raw);
+      if (parsed?.themes) {
+        setThemes(parsed.themes);
+        try { localStorage.setItem("retro-themes", JSON.stringify(parsed.themes)); } catch {}
+      }
+    } catch(e) { alert("Theme analysis failed: " + e.message); }
+    setThemeLoading(false);
+  }, [archive, apiKey]);
 
   const saveToArchive = (snap) => {
     const entry = {
@@ -350,10 +409,11 @@ Sprint dates: 2/24/2025 – 3/7/2025 | Team capacity: 80% (1 dev on PTO)`;
     await new Promise(r => setTimeout(r, 600));
     setLoadStep("Generating retrospective analysis...");
 
-    const system = `You are an expert Agile coach specializing in Azure DevOps retrospectives.
+    const system = `You are an expert Agile coach specializing in sprint retrospectives.
 Analyze sprint data and return ONLY valid JSON — no markdown, no explanation, no preamble.
-Use ADO terminology: PBIs (not stories), work items (not tickets), Closed/Active/New/Resolved states, Effort Points (not story points).
-Be specific and actionable. Extract real names and item IDs from the data when present.`;
+Use the appropriate terminology based on the work item format provided (ADO: PBIs, Effort Points, Closed/Active/New; Jira: Stories, Story Points, Done/In Progress/To Do).
+Be specific and actionable. Extract real names and item IDs from the data when present.
+IMPORTANT — Deduplication rule: Before generating talking points, identify items that represent the same root issue or observation. Consolidate duplicates into a single, more specific item. Do not surface the same issue under multiple lanes.
 
     const prompt = `Analyze this sprint data for ${sprintName} and return a single JSON object with exactly this shape:
 {
@@ -494,7 +554,7 @@ ${workItems || "None provided"}`;
             strokeDasharray={`${da} ${circ-da}`} strokeDashoffset={circ/4} style={{transition:"stroke-dasharray .8s"}}/>
           <circle cx={cx} cy={cy} r={r} fill="none" stroke={colorB} strokeWidth="11"
             strokeDasharray={`${db} ${circ-db}`} strokeDashoffset={circ/4-da} style={{transition:"stroke-dasharray .8s"}}/>
-          <text x={cx} y={cy-3} textAnchor="middle" fill="#f59e0b" fontSize="15" fontWeight="800" fontFamily="Space Mono">
+          <text x={cx} y={cy-3} textAnchor="middle" fill="#d97706" fontSize="15" fontWeight="800" fontFamily="Space Mono">
             {tot > 0 ? Math.round((a/tot)*100)+"%" : "—"}
           </text>
           <text x={cx} y={cy+13} textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="Space Mono">PBIs</text>
@@ -516,6 +576,7 @@ ${workItems || "None provided"}`;
     { id:"analysis", label:"AI Analysis",     icon:IC.zap     },
     { id:"talking",  label:"Talking Points",  icon:IC.message },
     { id:"summary",  label:"Sprint Summary",  icon:IC.chart   },
+    { id:"themes",   label:"Themes",          icon:IC.trending },
     { id:"archive",  label:"Archive",         icon:IC.star    },
     { id:"connect",  label:"Integrations",    icon:IC.plug    },
   ];
@@ -529,7 +590,6 @@ ${workItems || "None provided"}`;
     <>
       <style>{css}</style>
       <div className="app">
-        <div className="grid-bg"/>
         <div className="content">
 
           {/* ── HEADER ── */}
@@ -930,6 +990,134 @@ ${workItems || "None provided"}`;
                     </button>
                   </div>
                 </>
+            )}
+
+            {/* ══════════ THEMES TAB ══════════ */}
+            {tab==="themes" && (
+              <>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12,marginBottom:20}}>
+                  <div>
+                    <div style={{fontWeight:800,fontSize:18,color:"#0f172a",marginBottom:4}}>Recurring Themes</div>
+                    <div style={{fontSize:12,fontFamily:"Space Mono",color:"#9ca3af"}}>
+                      Patterns identified across {archive.length} sprint{archive.length!==1?"s":""} in your archive
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                    {themes.length > 0 && (
+                      <button className="btn btn-ghost btn-sm" onClick={()=>{setThemes([]);try{localStorage.removeItem("retro-themes");}catch{}}}>
+                        Clear
+                      </button>
+                    )}
+                    <button
+                      className="btn btn-primary"
+                      disabled={archive.length < 2 || themeLoading}
+                      onClick={analyzeThemes}
+                    >
+                      {themeLoading
+                        ? <><Icon path={IC.loader} size={14} className="spin"/> Analyzing...</>
+                        : <><Icon path={IC.trending} size={14}/> {themes.length > 0 ? "Re-analyze Themes" : "Analyze Themes"}</>
+                      }
+                    </button>
+                  </div>
+                </div>
+
+                {archive.length < 2 && (
+                  <div className="card" style={{textAlign:"center",padding:"48px 24px"}}>
+                    <div style={{fontSize:32,marginBottom:12}}>📊</div>
+                    <div style={{fontWeight:700,color:"#374151",marginBottom:8}}>Need more sprints</div>
+                    <div style={{fontSize:13,color:"#9ca3af",fontFamily:"Space Mono",lineHeight:1.8}}>
+                      Theme analysis requires at least 2 sprints in your archive.<br/>
+                      Complete another retro and it will appear here automatically.
+                    </div>
+                  </div>
+                )}
+
+                {archive.length >= 2 && themes.length === 0 && !themeLoading && (
+                  <div className="card" style={{textAlign:"center",padding:"48px 24px"}}>
+                    <div style={{fontSize:32,marginBottom:12}}>🔍</div>
+                    <div style={{fontWeight:700,color:"#374151",marginBottom:8}}>Ready to analyze</div>
+                    <div style={{fontSize:13,color:"#9ca3af",fontFamily:"Space Mono",lineHeight:1.8}}>
+                      You have {archive.length} sprints archived. Click <strong>Analyze Themes</strong> to find<br/>
+                      recurring patterns across your sprint history.
+                    </div>
+                  </div>
+                )}
+
+                {themeLoading && (
+                  <div className="card" style={{textAlign:"center",padding:"48px 24px"}}>
+                    <Icon path={IC.loader} size={32} color="#d97706" className="spin"/>
+                    <div style={{marginTop:16,fontFamily:"Space Mono",fontSize:12,color:"#9ca3af"}}>
+                      Scanning {archive.length} sprints for recurring patterns...
+                    </div>
+                  </div>
+                )}
+
+                {themes.length > 0 && !themeLoading && (
+                  <>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:14,marginBottom:24}}>
+                      {[
+                        {label:"Themes Found",   val:themes.length,                                                color:"#d97706"},
+                        {label:"High Severity",  val:themes.filter(t=>t.severity==="high").length,                color:"#dc2626"},
+                        {label:"Worsening",      val:themes.filter(t=>t.trend==="worsening").length,             color:"#7c3aed"},
+                        {label:"Improving",      val:themes.filter(t=>t.trend==="improving").length,             color:"#16a34a"},
+                      ].map(m => (
+                        <div key={m.label} className="m-card">
+                          <div className="m-val" style={{color:m.color}}>{m.val}</div>
+                          <div className="m-lbl">{m.label}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {["high","medium","low"].map(sev => {
+                      const group = themes.filter(t => t.severity === sev);
+                      if (!group.length) return null;
+                      const sevColor = {high:"#dc2626",medium:"#d97706",low:"#16a34a"}[sev];
+                      const sevLabel = {high:"High Severity",medium:"Medium Severity",low:"Low Severity"}[sev];
+                      return (
+                        <div key={sev}>
+                          <div className="divider">{sevLabel}</div>
+                          {group.map(theme => {
+                            const trendIcon = {improving:"↗",worsening:"↘",stable:"→"}[theme.trend] || "→";
+                            const trendColor = {improving:"#16a34a",worsening:"#dc2626",stable:"#9ca3af"}[theme.trend] || "#9ca3af";
+                            const catColor = {
+                              Process:"#d97706",Technical:"#2563eb",Team:"#0d9488",
+                              Communication:"#7c3aed",Delivery:"#dc2626",Quality:"#16a34a"
+                            }[theme.category] || "#9ca3af";
+                            return (
+                              <div key={theme.id} className="theme-card" style={{borderLeftColor:sevColor}}>
+                                <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12,flexWrap:"wrap",marginBottom:8}}>
+                                  <div className="theme-title">{theme.title}</div>
+                                  <div style={{display:"flex",gap:8,flexShrink:0}}>
+                                    <span className="badge" style={{background:`${catColor}15`,color:catColor,border:`1px solid ${catColor}30`}}>
+                                      {theme.category}
+                                    </span>
+                                    <span className="badge" style={{background:`${trendColor}12`,color:trendColor,border:`1px solid ${trendColor}25`}}>
+                                      {trendIcon} {theme.trend}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="theme-meta">
+                                  <span style={{fontSize:11,fontFamily:"Space Mono",color:"#9ca3af"}}>
+                                    Seen in <strong style={{color:"#374151"}}>{theme.sprintCount}</strong> sprint{theme.sprintCount!==1?"s":""}
+                                  </span>
+                                  <span style={{fontSize:11,fontFamily:"Space Mono",color:"#9ca3af"}}>·</span>
+                                  <span style={{fontSize:11,fontFamily:"Space Mono",color:"#9ca3af"}}>
+                                    First: <strong style={{color:"#374151"}}>{theme.firstSeen}</strong>
+                                  </span>
+                                </div>
+                                <div className="theme-desc">{theme.description}</div>
+                                <div className="theme-action">
+                                  <strong>Recommended action:</strong> {theme.recommendedAction}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+              </>
             )}
 
             {/* ══════════ ARCHIVE TAB ══════════ */}
