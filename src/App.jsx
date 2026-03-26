@@ -413,7 +413,7 @@ ${sprintSummaries}`;
 Analyze sprint data and return ONLY valid JSON — no markdown, no explanation, no preamble.
 Use the appropriate terminology based on the work item format provided (ADO: PBIs, Effort Points, Closed/Active/New; Jira: Stories, Story Points, Done/In Progress/To Do).
 Be specific and actionable. Extract real names and item IDs from the data when present.
-IMPORTANT — Deduplication rule: Before generating talking points, identify items that represent the same root issue or observation. Consolidate duplicates into a single, more specific item. Do not surface the same issue under multiple lanes.
+IMPORTANT — Deduplication rule: Before generating talking points, identify items that represent the same root issue or observation. Consolidate duplicates into a single, more specific item. Do not surface the same issue under multiple lanes.`;
 
     const prompt = `Analyze this sprint data for ${sprintName} and return a single JSON object with exactly this shape:
 {
